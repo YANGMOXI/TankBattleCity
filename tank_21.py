@@ -2,12 +2,11 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.20
+坦克大战 v1.21
 
 新增功能：
-    1.实现墙壁类
-    2.将随机创建的墙壁对象，加入到窗口
-        创建墙壁对象，加入到墙壁列表中
+    1.实现子弹不可穿墙（子弹与墙壁碰撞）
+    2.子弹击碎墙壁时，墙壁生命值减少
 """
 
 import pygame
@@ -17,7 +16,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125, 125, 125)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-VERSION = 'v1.19'
+VERSION = 'v1.21'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -107,6 +106,8 @@ class MainGame:
         for wall in MainGame.Wall_list:
             if wall.live:
                 wall.displayWall()
+            else:
+                MainGame.Wall_list.remove(wall)
 
 
     def blitEnemyTank(self):
@@ -130,6 +131,8 @@ class MainGame:
                 bullet.bulletMove()  # 子弹移动
                 # 调用碰撞 —— 我方子弹 碰撞 敌方坦克
                 bullet.hitEnemyTank()
+                # 调用碰撞 - 我方子弹 是否碰撞 墙壁
+                bullet.hitWalls()
             else:
                 MainGame.Bullet_list.remove(bullet)
 
@@ -139,6 +142,7 @@ class MainGame:
             if eBullet.live:
                 eBullet.displayBullet()
                 eBullet.bulletMove()  # 子弹移动
+                eBullet.hitWalls()  # 子弹是否撞墙
                 if MainGame.TANK_P1 and MainGame.TANK_P1.live:
                     # 敌方子弹是否碰撞我方坦克
                     eBullet.hitMyTank()
@@ -408,6 +412,15 @@ class Bullet(BasicItem):
             MainGame.Explode_list.append(explode)
             self.live = False
             MainGame.TANK_P1.live = False
+
+    def hitWalls(self):
+        """子弹与墙壁的碰撞"""
+        for wall in MainGame.Wall_list:
+            if pygame.sprite.collide_rect(self, wall):
+                self.live = False
+                wall.hp -= 1
+                if wall.hp <= 0:
+                    wall.live = False
 
 
 class Expolde:
