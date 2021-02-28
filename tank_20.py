@@ -2,10 +2,12 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.19
+坦克大战 v1.20
 
 新增功能：
-    1.坦克续命 - 死亡之后点击Esc按键重生
+    1.实现墙壁类
+    2.将随机创建的墙壁对象，加入到窗口
+        创建墙壁对象，加入到墙壁列表中
 """
 
 import pygame
@@ -35,9 +37,8 @@ class MainGame:
     Enemy_bullet_list = []
     # 爆炸效果列表
     Explode_list = []
-
-    def __init__(self):
-        pass
+    # 墙壁列表
+    Wall_list = []
 
     def startGame(self):
         """开始游戏"""
@@ -48,6 +49,8 @@ class MainGame:
         self.createMyTank()
         # 创建敌方坦克
         self.createEnemyTank()
+        # 创建墙壁
+        self.createWalls()
 
         # 设置游戏标题
         _display.set_caption('坦克大战%s' % VERSION)
@@ -56,6 +59,8 @@ class MainGame:
         while True:
             MainGame.window.fill(COLOR_BLACK)  # 给窗口 纯色填充
             self.getEvent()  # 持续完成事件的获取
+            # 调用展示墙壁的方法
+            self.blitWalls()
             # 将绘制文字的画布 展示到窗口中
             MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' % len(MainGame.EnemyTank_list)), (10, 10))  # 小画布; 坐标
             # 我方坦克 —— 在窗口中显示
@@ -85,12 +90,24 @@ class MainGame:
         """敌方坦克 —— 创建坦克"""
         # 生成位置范围
         top = 120
-
         for i in range(MainGame.EnemyTank_count):
             speed = random.randint(3, 5)  # 每辆坦克速度不一样
             left = random.randint(1, 7)  # 横坐标区间 —— 允许重复
             eTank = EnemyTank(left * 100, top, speed)
             MainGame.EnemyTank_list.append(eTank)
+
+    def createWalls(self):
+        """随机创建 - 简易版 - y轴固定"""
+        for i in range(1, 7):
+            wall = Wall(i*150, 260)
+            MainGame.Wall_list.append(wall)
+
+    def blitWalls(self):
+        """墙壁 —— 加入到窗口中"""
+        for wall in MainGame.Wall_list:
+            if wall.live:
+                wall.displayWall()
+
 
     def blitEnemyTank(self):
         """敌方坦克 —— 加入到窗口中"""
@@ -422,13 +439,19 @@ class Expolde:
 
 
 class Wall:
-    """爆炸效果"""
-    def __init__(self):
-        pass
+    """墙壁类"""
+    def __init__(self, left, top):
+        self.image = pygame.image.load('img/walls.gif')
+        self.rect = self.image.get_rect()
+        self.rect.left = left
+        self.rect.top = top
+        self.live = True
+        self.hp = 1 # 记录墙壁的生命值
 
     def displayWall(self):
         """展示墙壁（障碍物）"""
-        pass
+        MainGame.window.blit(self.image, self.rect)
+
 
 
 class Music:
