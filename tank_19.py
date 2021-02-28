@@ -2,10 +2,10 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.18
+坦克大战 v1.19
 
 新增功能：
-    1.敌方子弹 碰撞 我方坦克
+    1.坦克续命 - 死亡之后点击Esc按键重生
 """
 
 import pygame
@@ -15,7 +15,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125, 125, 125)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-VERSION = 'v1.18'
+VERSION = 'v1.19'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -45,10 +45,9 @@ class MainGame:
         # 创建窗口，加载窗口 -> surface（画布）
         MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
         # 创建我方坦克
-        MainGame.TANK_P1 = MyTank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
-                                  MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1])  # 初始位置
+        self.createMyTank()
         # 创建敌方坦克
-        self.creatEnemyTank()
+        self.createEnemyTank()
 
         # 设置游戏标题
         _display.set_caption('坦克大战%s' % VERSION)
@@ -78,7 +77,11 @@ class MainGame:
             # 窗口刷新
             _display.update()
 
-    def creatEnemyTank(self):
+    def createMyTank(self):
+        MainGame.TANK_P1 = Tank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
+                                  MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1])  # 初始位置
+
+    def createEnemyTank(self):
         """敌方坦克 —— 创建坦克"""
         # 生成位置范围
         top = 120
@@ -144,7 +147,11 @@ class MainGame:
                 self.endGame()
             # 按键判断
             if event.type == pygame.KEYDOWN:
-                if MainGame.TANK_P1.live:
+                if event.key == pygame.K_ESCAPE and not MainGame.TANK_P1.live:
+                    # 坦克重生方法 —— 按Esc键
+                    self.createMyTank()
+
+                if MainGame.TANK_P1 and MainGame.TANK_P1.live:
                     if event.key == pygame.K_LEFT:
                         print("坦克向左")
                         # 修改坦克方向
