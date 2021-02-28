@@ -2,11 +2,10 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.04
+坦克大战 v1.05
 
 新增功能：
-    事件处理：
-        实现左上角文字提示 —— pygame.font
+    加载我方坦克
 """
 
 
@@ -15,13 +14,17 @@ import pygame
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
 COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.04'
+VERSION = 'v1.05'
+P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
+
 
 class MainGame:
     """主逻辑"""
     window = None # 游戏主窗口
-    SCREEN_WIDTH = 800
     SCREEN_HIGHT = 500
+    SCREEN_WIDTH = 800
+    # 创建我方坦克
+    TANK_P1 = None
 
     def __init__(self):
         pass
@@ -31,6 +34,7 @@ class MainGame:
         pygame.display.init()
         # 创建窗口，加载窗口 -> surface（画布）
         MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
+        MainGame.TANK_P1 = Tank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0])/2, MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1]) # 初始位置
         # 设置游戏标题
         _display.set_caption('坦克大战%s' %VERSION)
         # 文字绘制
@@ -41,7 +45,8 @@ class MainGame:
             self.getEvent()  # 持续完成事件的获取
             # 将绘制文字的画布 展示到窗口中
             MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' %5), (10,10)) # 小画布; 坐标
-
+            # 显示坦克到窗口中
+            MainGame.TANK_P1.displayTank()
             _display.update() # 窗口刷新
 
     def getEvent(self):
@@ -49,7 +54,6 @@ class MainGame:
         # 获取所有事件
         # 对事件判断处理1.鼠标事件
         eventList = pygame.event.get()
-
         for event in eventList:
             # 点击关闭按钮（鼠标事件）
             if event.type == pygame.QUIT:
@@ -78,8 +82,6 @@ class MainGame:
         textSurface = font.render(text, True, COLOR_GRAY)  # 内容，抗锯齿，字颜色
         return textSurface
 
-
-
     def endGame(self):
         """结束游戏"""
         print("正在退出游戏...")
@@ -88,8 +90,20 @@ class MainGame:
 
 class Tank:
     """坦克基类"""
-    def __init__(self):
-        pass
+    def __init__(self, left, top):
+        self.images = {  # 坦克图片集
+            'U': pygame.image.load('img/p1tankU.gif'),
+            'D': pygame.image.load('img/p1tankD.gif'),
+            'L': pygame.image.load('img/p1tankL.gif'),
+            'R': pygame.image.load('img/p1tankR.gif'),
+        }
+        self.direction = 'U'  # 当前朝向
+        self.image = self.images[self.direction]  # 当前坦克图片,从图集中获取 —— 与朝向相关联
+        # 坦克所在位置（相对窗口） Rect ->
+        self.rect = self.image.get_rect()
+        # 指定初始化位置
+        self.rect.left = left
+        self.rect.top = top
 
     def move(self):
         """移动"""
@@ -100,8 +114,15 @@ class Tank:
         pass
 
     def displayTank(self):
-        """展示坦克"""
-        pass
+        """
+        展示坦克：将坦克surface绘制到窗口中
+        实时刷新（调头）
+        """
+        # 1.重置坦克图片
+        self.image = self.images[self.direction]
+        # 2.将坦克加入到窗口
+        MainGame.window.blit(self.image, self.rect)
+        
 
 
 class MyTank(Tank):
