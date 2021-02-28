@@ -2,11 +2,10 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.21
+坦克大战 v1.22
 
 新增功能：
-    1.实现子弹不可穿墙（子弹与墙壁碰撞）
-    2.子弹击碎墙壁时，墙壁生命值减少
+    1.坦克碰撞墙壁逻辑（坦克不能穿墙）
 """
 
 import pygame
@@ -16,7 +15,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125, 125, 125)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-VERSION = 'v1.21'
+VERSION = 'v1.22'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -70,6 +69,8 @@ class MainGame:
             # 根据tank移动开关状态进行移动
             if MainGame.TANK_P1 and not MainGame.TANK_P1.stop:
                 MainGame.TANK_P1.move()
+                # 坦克碰撞墙壁 - 还原坐标
+                MainGame.TANK_P1.hitwalls()
             # 我方 - 渲染子弹列表方法
             self.blitBullet()
             # 敌方 - 渲染子弹列表方法
@@ -116,6 +117,7 @@ class MainGame:
             if eTank.live:
                 eTank.displayTank()
                 eTank.randomMove()
+                eTank.hitwalls()
                 # 射击（随机性）—— 产生子弹
                 eBullet = eTank.shoot()
                 if eBullet:  # 子弹 存储到敌方子弹列表
@@ -250,9 +252,14 @@ class Tank(BasicItem):
         self.speed = 8  # 速度/单位位移
         self.stop = True  # 坦克移动开关
         self.live = True  # 记录坦克是否存活
+        self.oldLeft = self.rect.left  # 记录坦克移动墙的坐标（用于坐标还原时使用）
+        self.oldTop = self.rect.top
 
     def move(self):
         """移动"""
+        # 先记录移动之前的坐标
+        self.oldLeft = self.rect.left
+        self.oldTop = self.rect.top
         if self.direction == 'L':
             if self.rect.left > 0:
                 self.rect.left -= self.speed
@@ -265,6 +272,17 @@ class Tank(BasicItem):
         elif self.direction == 'D':
             if self.rect.top + self.rect.height < MainGame.SCREEN_HIGHT:
                 self.rect.top += self.speed
+
+    def stay(self):
+        """还原坐标"""
+        self.rect.left = self.oldLeft
+        self.rect.top = self.oldTop
+
+    def hitwalls(self):
+        """坦克碰撞墙壁"""
+        for wall in MainGame.Wall_list:
+            if pygame.sprite.collide_rect(self, wall):
+                self.stay()
 
     def shoot(self):
         """射击"""
