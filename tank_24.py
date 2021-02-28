@@ -2,10 +2,13 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.23
+坦克大战 v1.24
 
 新增功能：
-    1.坦克之间的碰撞墙壁（不可穿过）
+    1.音效处理（pygame.mixer.music模块）
+        我方坦克出生
+        发生子弹
+        爆炸
 """
 
 import pygame
@@ -15,7 +18,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125, 125, 125)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-VERSION = 'v1.23'
+VERSION = 'v1.24'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -43,6 +46,9 @@ class MainGame:
         pygame.display.init()
         # 创建窗口，加载窗口 -> surface（画布）
         MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
+        # 出场音乐
+        music = Music('img/start.wav')
+        music.play()
         # 创建我方坦克
         self.createMyTank()
         # 创建敌方坦克
@@ -87,10 +93,11 @@ class MainGame:
         MainGame.TANK_P1 = MyTank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
                                   MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1])  # 初始位置
 
+
     def createEnemyTank(self):
         """敌方坦克 —— 创建坦克"""
         # 生成位置范围
-        top = 120
+        top = 0
         for i in range(MainGame.EnemyTank_count):
             speed = random.randint(3, 5)  # 每辆坦克速度不一样
             left = random.randint(1, 7)  # 横坐标区间 —— 允许重复
@@ -99,9 +106,10 @@ class MainGame:
 
     def createWalls(self):
         """随机创建 - 简易版 - y轴固定"""
-        for i in range(1, 7):
-            wall = Wall(i*150, 260)
-            MainGame.Wall_list.append(wall)
+        for i in range(1, 6):
+            for j in range(2, 4):
+                wall = Wall(i*130, j*60)
+                MainGame.Wall_list.append(wall)
 
     def blitWalls(self):
         """墙壁 —— 加入到窗口中"""
@@ -157,7 +165,10 @@ class MainGame:
     def displayExplodes(self):
         for explode in MainGame.Explode_list:
             if explode.live:
+                print(self)
                 explode.displayExplode()
+                music = Music('music/blast.wav')
+                music.play()
             else:
                 MainGame.Explode_list.remove(explode)
 
@@ -174,6 +185,8 @@ class MainGame:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE and not MainGame.TANK_P1.live:
                     # 坦克重生方法 —— 按Esc键
+                    music = Music('music/add.wav')
+                    music.play()
                     self.createMyTank()
 
                 if MainGame.TANK_P1 and MainGame.TANK_P1.live:
@@ -203,6 +216,8 @@ class MainGame:
                             m = Bullet(MainGame.TANK_P1)
                             # 将子弹加入子弹列表
                             MainGame.Bullet_list.append(m)
+                            music = Music('music/fire.wav')
+                            music.play()
                         else:
                             print("当前子弹数量不足")
 
@@ -236,7 +251,6 @@ class BasicItem(pygame.sprite.Sprite):
 
 class Tank(BasicItem):
     """坦克基类"""
-
     def __init__(self, left, top):
         self.images = {  # 坦克图片集
             'U': pygame.image.load('img/p1tankU.gif'),
@@ -447,7 +461,9 @@ class Bullet(BasicItem):
         """子弹与墙壁的碰撞"""
         for wall in MainGame.Wall_list:
             if pygame.sprite.collide_rect(self, wall):
-                self.live = False
+                self.live = False  # 子弹消失
+                music = Music('music/hit.wav')
+                music.play()
                 wall.hp -= 1
                 if wall.hp <= 0:
                     wall.live = False
@@ -499,11 +515,15 @@ class Wall:
 
 class Music:
     """音效"""
-    def __init__(self):
-        pass
+    def __init__(self, fileName):
+        self.fileName = fileName
+        # 初始化混响器
+        pygame.mixer.init()
+        pygame.mixer.music.load(fileName)
 
     def play(self):
         """开始播放音乐"""
+        pygame.mixer.music.play(loops=0)  # loops播放次数  -1循环
         pass
 
 
