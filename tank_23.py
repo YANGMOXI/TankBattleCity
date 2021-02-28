@@ -2,10 +2,10 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.22
+坦克大战 v1.23
 
 新增功能：
-    1.坦克碰撞墙壁逻辑（坦克不能穿墙）
+    1.坦克之间的碰撞墙壁（不可穿过）
 """
 
 import pygame
@@ -15,7 +15,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125, 125, 125)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-VERSION = 'v1.22'
+VERSION = 'v1.23'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -71,6 +71,7 @@ class MainGame:
                 MainGame.TANK_P1.move()
                 # 坦克碰撞墙壁 - 还原坐标
                 MainGame.TANK_P1.hitwalls()
+                MainGame.TANK_P1.hitEnemyTank()
             # 我方 - 渲染子弹列表方法
             self.blitBullet()
             # 敌方 - 渲染子弹列表方法
@@ -83,7 +84,7 @@ class MainGame:
             _display.update()
 
     def createMyTank(self):
-        MainGame.TANK_P1 = Tank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
+        MainGame.TANK_P1 = MyTank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
                                   MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1])  # 初始位置
 
     def createEnemyTank(self):
@@ -118,6 +119,7 @@ class MainGame:
                 eTank.displayTank()
                 eTank.randomMove()
                 eTank.hitwalls()
+                eTank.hitMyTank()
                 # 射击（随机性）—— 产生子弹
                 eBullet = eTank.shoot()
                 if eBullet:  # 子弹 存储到敌方子弹列表
@@ -302,7 +304,13 @@ class Tank(BasicItem):
 class MyTank(Tank):
     """我方坦克"""
     def __init__(self, left, top):
-        super().__init__(left, top)
+        super(MyTank, self).__init__(left, top)
+
+    def hitEnemyTank(self):
+        """主动碰撞敌方坦克"""
+        for eTank in MainGame.EnemyTank_list:
+            if pygame.sprite.collide_rect(self, eTank):
+                self.stay()
 
 
 class EnemyTank(Tank):
@@ -354,6 +362,10 @@ class EnemyTank(Tank):
         num = random.randint(1, 30)
         if num == 1:
             return Bullet(self)
+
+    def hitMyTank(self):
+        if pygame.sprite.collide_rect(self, MainGame.TANK_P1):
+            self.stay()
 
 
 class Bullet(BasicItem):
