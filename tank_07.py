@@ -2,14 +2,10 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.06
+坦克大战 v1.07
 
-新增功能：
-    1.坦克类速度speed属性，用来控制坦克移动快慢
-    2.事件处理：
-        2.1 改变坦克方向
-        2.2 修改坦克位置（left, top）
-            屈居于坦克的速度
+优化功能：
+    坦克移动——越界问题
 """
 
 
@@ -18,7 +14,7 @@ import pygame
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
 COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.06'
+VERSION = 'v1.07'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -127,13 +123,17 @@ class Tank:
     def move(self):
         """移动"""
         if self.direction == 'L':
-            self.rect.left -= self.speed
+            if self.rect.left > 0:
+                self.rect.left -= self.speed
         elif self.direction == 'R':
-            self.rect.left += self.speed
+            if self.rect.left + self.rect.width < MainGame.SCREEN_WIDTH:
+                self.rect.left += self.speed
         elif self.direction == 'U':
-            self.rect.top -= self.speed
+            if self.rect.top > 0:
+                self.rect.top -= self.speed
         elif self.direction == 'D':
-            self.rect.top += self.speed
+            if self.rect.top + self.rect.height < MainGame.SCREEN_HIGHT:
+                self.rect.top += self.speed
 
     def shoot(self):
         """射击"""
