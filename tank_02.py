@@ -2,39 +2,43 @@
 # date: 2021/2/9 21:26
 
 """
-坦克大战 —— 基础框架搭建
+坦克大战 v1.02
 
-# 基于面向对象的分析
-1.有哪些类？不同类对应的功能：
-	1.主逻辑类
-    	开始游戏
-        结束游戏
-    2.坦克类（a.我方坦克 b.敌方坦克）
-    	移动
-        射击
-        展示坦克
-    3.子弹类
-    	移动
-    4.爆炸效果类
-    	展示爆炸效果
-    5.墙壁类
-    	属性：是否可以通过
-    6.音效类
-    	播放音乐
+新增功能：
+    创建游戏窗口 —— pygame中模块使用
 """
 
 import pygame
 
+_display = pygame.display
+COLOR_GRAY = pygame.Color(125,125,125)
+
 class MainGame:
     """主逻辑"""
+    window = None # 游戏主窗口
+    SCREEN_WIDTH = 800
+    SCREEN_HIGHT = 500
+
     def __init__(self):
         pass
 
     def startGame(self):
-        pass
+        """开始游戏"""
+        pygame.display.init()
+        # 创建窗口，加载窗口 -> surface
+        MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
+        # 设置游戏标题
+        _display.set_caption('坦克大战v1.02')
+        # 让窗口持续刷新操作
+        while True:
+            MainGame.window.fill(MainGame.COLOR_GRAY) # 给窗口 纯色填充
+            _display.update()
 
-    def stopGame(self):
-        pass
+
+    def endGame(self):
+        """结束游戏"""
+        print("正在退出游戏...")
+        exit()
 
 
 class Tank:
@@ -109,3 +113,7 @@ class Music:
     def play(self):
         """开始播放音乐"""
         pass
+
+
+if __name__ == '__main__':
+    MainGame().startGame()
