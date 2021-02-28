@@ -2,13 +2,11 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.03
+坦克大战 v1.04
 
 新增功能：
     事件处理：
-        点击关闭按钮，退出程序的事件
-        方向控制
-        子弹发射
+        实现左上角文字提示 —— pygame.font
 """
 
 
@@ -16,7 +14,8 @@ import pygame
 
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
-VERSION = 'v1.03'
+COLOR_BLACK = pygame.Color(0,0,0)
+VERSION = 'v1.04'
 
 class MainGame:
     """主逻辑"""
@@ -30,15 +29,20 @@ class MainGame:
     def startGame(self):
         """开始游戏"""
         pygame.display.init()
-        # 创建窗口，加载窗口 -> surface
+        # 创建窗口，加载窗口 -> surface（画布）
         MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
         # 设置游戏标题
         _display.set_caption('坦克大战%s' %VERSION)
+        # 文字绘制
+
         # 让窗口持续刷新操作
         while True:
-            MainGame.window.fill(COLOR_GRAY)  # 给窗口 纯色填充
+            MainGame.window.fill(COLOR_BLACK)  # 给窗口 纯色填充
             self.getEvent()  # 持续完成事件的获取
-            _display.update()
+            # 将绘制文字的画布 展示到窗口中
+            MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' %5), (10,10)) # 小画布; 坐标
+
+            _display.update() # 窗口刷新
 
     def getEvent(self):
         """获取程序期间所有事件（鼠标事件、键盘事件）"""
@@ -62,6 +66,18 @@ class MainGame:
                     print("坦克向下")
                 elif event.key == pygame.K_SPACE:
                     print("发射子弹")
+
+    def getTextSurface(self, text):
+        """绘制文字"""
+        # 初始化字体模块
+        pygame.font.init()
+        # 选择字体样式
+        # fontList = pygame.font.get_fonts()  # 获取系统上所有的字体
+        font = pygame.font.SysFont(name='microsoftyaheimicrosoftyaheiui', size=16)
+        # 文字内容绘制
+        textSurface = font.render(text, True, COLOR_GRAY)  # 内容，抗锯齿，字颜色
+        return textSurface
+
 
 
     def endGame(self):
