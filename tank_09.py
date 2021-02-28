@@ -2,22 +2,22 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.08
+坦克大战 v1.09
 
-优化功能：
-    优化坦克的移动方式：
-        1.按下方向键，坦克持续移动
-        2.松开方向键，坦克停止
+新增敌方坦克：
+	1.完善敌方坦克类
+    2.创建敌方坦克，将敌方坦克展示到窗口中
 """
 
 
 import pygame
 import time
+import random
 
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
 COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.08'
+VERSION = 'v1.09'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -28,6 +28,9 @@ class MainGame:
     SCREEN_WIDTH = 800
     # 创建我方坦克
     TANK_P1 = None
+    # 创建敌方坦克
+    EnemyTank_list = []
+    EnemyTank_count = 6
 
     def __init__(self):
         pass
@@ -37,25 +40,46 @@ class MainGame:
         pygame.display.init()
         # 创建窗口，加载窗口 -> surface（画布）
         MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
+        # 创建我方坦克
         MainGame.TANK_P1 = Tank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0])/2, MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1]) # 初始位置
+        # 创建敌方坦克
+        self.creatEnemyTank()
+
         # 设置游戏标题
         _display.set_caption('坦克大战%s' %VERSION)
-        # 文字绘制
+
 
         # 让窗口持续刷新操作
         while True:
             MainGame.window.fill(COLOR_BLACK)  # 给窗口 纯色填充
             self.getEvent()  # 持续完成事件的获取
             # 将绘制文字的画布 展示到窗口中
-            MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' %5), (10,10)) # 小画布; 坐标
-            # 显示坦克到窗口中
+            MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' %len(MainGame.EnemyTank_list)), (10,10)) # 小画布; 坐标
+            # 在窗口中 显示我方坦克
             MainGame.TANK_P1.displayTank()
+            # 在窗口中 显示敌方坦克
+            self.blitEnemyTnak()
             # 根据tank移动开关状态进行移动
             if MainGame.TANK_P1 and not MainGame.TANK_P1.stop:
                 MainGame.TANK_P1.move()
                 time.sleep(0.02)
             # 窗口刷新
             _display.update()
+
+    def creatEnemyTank(self):
+        """创建敌方坦克"""
+        # 生成位置范围
+        top = 120
+        speed = random.randint(3, 5)
+        for i in range(MainGame.EnemyTank_count):
+            left = random.randint(1, 7)  # 横坐标区间 —— 允许重复
+            eTank = EnemyTank(left*100, top, speed)
+            MainGame.EnemyTank_list.append(eTank)
+
+    # 将坦克加入到窗口中
+    def blitEnemyTnak(self):
+        for eTank in MainGame.EnemyTank_list:
+            eTank.displayTank()
 
     def getEvent(self):
         """获取程序期间所有事件（鼠标事件、键盘事件）"""
@@ -173,9 +197,37 @@ class MyTank(Tank):
 
 class EnemyTank(Tank):
     """敌方坦克"""
-    def __init__(self):
-        pass
+    def __init__(self, left, top, speed):
+        # 图片集合
+        self.images = {  # 敌方坦克图片集
+            'U': pygame.image.load('img/enemy1U.gif'),
+            'D': pygame.image.load('img/enemy1D.gif'),
+            'L': pygame.image.load('img/enemy1L.gif'),
+            'R': pygame.image.load('img/enemy1R.gif'),
+        }
+        self.direction = self.randomDirection()  # 随机方向
+        self.image = self.images[self.direction]  # 当前坦克图片,从图集中获取 —— 与朝向相关联
+        # 坦克所在位置（相对窗口） Rect ->
+        self.rect = self.image.get_rect()
+        # 指定初始化位置
+        self.rect.left = left
+        self.rect.top = top
+        self.speed = speed  # 速度
+        self.stop = True  # 移动开关
 
+    def randomDirection(self):
+        num = random.randint(1,4)
+        if num == 1:
+            return 'U'
+        elif num == 2:
+            return 'D'
+        elif num == 3:
+            return 'L'
+        elif num == 4:
+            return 'R'
+
+    # def displayEnemyTank(self):
+    #     super().displayTank()
 
 class Bullet:
     """子弹类"""
