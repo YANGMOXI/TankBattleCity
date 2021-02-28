@@ -2,11 +2,10 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.10
+坦克大战 v1.11
 
-新增敌方坦克功能：
-	1.实现敌方坦克的移动
-    	随机移动（在某一个方向移动一定距离的时候，随机更换方向继续移动）
+新增功能：
+    完善子弹类的封装
 """
 
 
@@ -17,7 +16,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
 COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.10'
+VERSION = 'v1.11'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -189,7 +188,6 @@ class Tank:
         MainGame.window.blit(self.image, self.rect)
         
 
-
 class MyTank(Tank):
     """我方坦克"""
     def __init__(self):
@@ -240,11 +238,36 @@ class EnemyTank(Tank):
         time.sleep(0.02)
 
 
-
 class Bullet:
     """子弹类"""
-    def __init__(self):
-        pass
+    def __init__(self, tank):
+        # 图片
+        self.image = pygame.image.load('img/bullet.gif')
+        # 方向（坦克的方向）
+        self.direction = tank.direction
+        # 速度
+        self.speed = MainGame.TANK_P1.speed * 1.5
+        # 坐标
+        self.rect = self.image.get_rect()
+        # 初始化位置需根据坦克的方向进行调整
+        if self.direction == 'U':
+            # self.rect.left += (坦克宽度的一半 - 子弹宽度的一半)
+            self.rect.left = tank.rect.left + tank.rect.width/2 - self.rect.width/2
+            self.top = tank.rect.top - self.rect.height
+        elif self.direction == 'D':
+            self.rect.left = tank.rect.left + tank.rect.width/2 - self.rect.width/2
+            self.top = tank.rect.top + self.rect.height
+        elif self.direction == 'L':
+            self.rect.left = tank.rect.left + tank.rect.width/2 - self.rect.width/2
+            self.top = tank.rect.top + tank.rect.width/2 - self.rect.width/2
+        elif self.direction == 'R':
+            self.rect.left = tank.rect.left + tank.rect.width
+            self.top = tank.rect.top + tank.rect.width/2 - self.rect.width/2
+
+    # 将子弹加入到窗口中
+    def display_bullet(self):
+        MainGame.window.blit(self.image, self.rect)
+
 
     def move(self):
         """子弹移动"""
@@ -286,5 +309,4 @@ class Music:
 
 
 if __name__ == '__main__':
-    game1 = MainGame()
-    game1.startGame()
+    MainGame().startGame()
