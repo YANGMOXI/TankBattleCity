@@ -2,22 +2,22 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.16
+坦克大战 v1.17
 
 新增功能：
-	1.实现我方坦克与敌方坦克的碰撞
-    	使用pygame.sprite模块
-    	    使Bullet, Tank继承精灵类
+    1.实现爆炸效果类
+	2.在窗口中展示爆炸效果
 """
 
 import pygame
 import time
 import random
 
+
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125, 125, 125)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-VERSION = 'v1.16'
+VERSION = 'v1.17'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -35,6 +35,8 @@ class MainGame:
     Bullet_list = []
     # 敌方子弹 — 存储列表
     Enemy_bullet_list = []
+    # 爆炸效果列表
+    Explode_list = []
 
     def __init__(self):
         pass
@@ -71,6 +73,8 @@ class MainGame:
             self.blitBullet()
             # 敌方 - 渲染子弹列表方法
             self.blitEnemyBullet()
+            # 爆炸效果 - 我方子弹碰撞敌方坦克
+            self.displayExplodes()
 
             time.sleep(0.02)
             # 窗口刷新
@@ -100,7 +104,6 @@ class MainGame:
             else:
                 MainGame.EnemyTank_list.remove(eTank)
 
-
     def blitBullet(self):
         """我方子弹 —— 加入到窗口中"""
         for bullet in MainGame.Bullet_list:
@@ -120,6 +123,14 @@ class MainGame:
                 eBullet.bulletMove()
             else:
                 MainGame.Enemy_bullet_list.remove(eBullet) # 从列表中 删除子弹
+
+    # 新增方法 —— 渲染爆炸列表方法
+    def displayExplodes(self):
+        for explode in MainGame.Explode_list:
+            if explode.live:
+                explode.displayExplode()
+            else:
+                MainGame.Explode_list.remove(explode)
 
     def getEvent(self):
         """获取程序期间所有事件（鼠标事件、键盘事件）"""
@@ -182,6 +193,7 @@ class MainGame:
         """结束游戏"""
         print("正在退出游戏...")
         exit()
+
 
 class BasicItem(pygame.sprite.Sprite):
     def __init__(self, color, width, height):
@@ -356,18 +368,40 @@ class Bullet(BasicItem):
         for eTank in MainGame.EnemyTank_list:
             # 碰撞算法(rect：2矩形是否有交集) -> bool
             if pygame.sprite.collide_rect(self, eTank):
+                # 产生一个爆炸效果； 加入爆炸效果列表
+                explode = Expolde(eTank)
+                MainGame.Explode_list.append(explode)
                 self.live = False
                 eTank.live = False
 
 
 class Expolde:
-    """爆炸效果"""
-    def __init__(self):
-        pass
+    """爆炸效果 - 多张图：从小到大，最后消失"""
+    def __init__(self, tank):
+        self.step = 0 # 爆炸阶段
+        self.images = [ # 爆炸效果图片集
+            pygame.image.load('img/blast1.gif'),
+            pygame.image.load('img/blast2.gif'),
+            pygame.image.load('img/blast3.gif'),
+            pygame.image.load('img/blast4.gif'),
+            pygame.image.load('img/blast5.gif')
+        ]
+        self.image = self.images[self.step]
+        self.rect = self.image.get_rect()
+        self.rect.top = tank.rect.top - (self.rect.height / 2 - tank.rect.height / 2)
+        self.rect.left = tank.rect.left - (self.rect.width / 2 - tank.rect.width / 2)
+        self.live = True
 
-    def displayExpolde(self):
+    def displayExplode(self):
         """展示爆炸"""
-        pass
+        if self.step < len(self.images):
+            MainGame.window.blit(self.image, self.rect)
+            self.image = self.images[self.step]
+            self.step += 1
+        else:
+            self.live = False
+            self.step = 0
+
 
 
 class Wall:
