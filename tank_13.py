@@ -2,27 +2,27 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.12
+坦克大战 v1.13
 
-完善子弹的发射功能：
-	tank 发射子弹 -> 产生一颗子弹
+完善子弹的移动功能：
+	1.移动
+	2.碰到墙壁消失
 """
-
 
 import pygame
 import time
 import random
 
 _display = pygame.display
-COLOR_GRAY = pygame.Color(125,125,125)
-COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.12'
+COLOR_GRAY = pygame.Color(125, 125, 125)
+COLOR_BLACK = pygame.Color(0, 0, 0)
+VERSION = 'v1.13'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
 class MainGame:
     """主逻辑"""
-    window = None # 游戏主窗口
+    window = None  # 游戏主窗口
     SCREEN_HIGHT = 500
     SCREEN_WIDTH = 800
     # 创建我方坦克
@@ -42,19 +42,20 @@ class MainGame:
         # 创建窗口，加载窗口 -> surface（画布）
         MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
         # 创建我方坦克
-        MainGame.TANK_P1 = Tank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0])/2, MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1]) # 初始位置
+        MainGame.TANK_P1 = Tank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
+                                MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1])  # 初始位置
         # 创建敌方坦克
         self.creatEnemyTank()
 
         # 设置游戏标题
-        _display.set_caption('坦克大战%s' %VERSION)
+        _display.set_caption('坦克大战%s' % VERSION)
 
         # 让窗口持续刷新操作
         while True:
             MainGame.window.fill(COLOR_BLACK)  # 给窗口 纯色填充
             self.getEvent()  # 持续完成事件的获取
             # 将绘制文字的画布 展示到窗口中
-            MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' %len(MainGame.EnemyTank_list)), (10,10)) # 小画布; 坐标
+            MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' % len(MainGame.EnemyTank_list)), (10, 10))  # 小画布; 坐标
             # 我方坦克 —— 在窗口中显示
             MainGame.TANK_P1.displayTank()
             # 敌方坦克 —— 在窗口中显示
@@ -65,6 +66,7 @@ class MainGame:
 
             # 子弹列表方法
             self.blitBullet()
+
 
             time.sleep(0.02)
             # 窗口刷新
@@ -77,7 +79,7 @@ class MainGame:
         speed = random.randint(3, 5)
         for i in range(MainGame.EnemyTank_count):
             left = random.randint(1, 7)  # 横坐标区间 —— 允许重复
-            eTank = EnemyTank(left*100, top, speed)
+            eTank = EnemyTank(left * 100, top, speed)
             MainGame.EnemyTank_list.append(eTank)
 
     def blitEnemyTnak(self):
@@ -90,7 +92,7 @@ class MainGame:
         """将子弹加入到窗口中"""
         for bullet in MainGame.Bullet_list:
             bullet.displayBullet()
-
+            bullet.bulletMove()
 
     def getEvent(self):
         """获取程序期间所有事件（鼠标事件、键盘事件）"""
@@ -109,30 +111,25 @@ class MainGame:
                     MainGame.TANK_P1.direction = 'L'
                     # 移动操作
                     # MainGame.TANK_P1.move()
-                    MainGame.TANK_P1.stop = False # 打开开关
-
+                    MainGame.TANK_P1.stop = False  # 打开开关
                 elif event.key == pygame.K_RIGHT:
                     print("坦克向右")
                     MainGame.TANK_P1.direction = 'R'
                     MainGame.TANK_P1.stop = False
-
                 elif event.key == pygame.K_UP:
                     print("坦克向上")
                     MainGame.TANK_P1.direction = 'U'
                     MainGame.TANK_P1.stop = False
-
                 elif event.key == pygame.K_DOWN:
                     print("坦克向下")
                     MainGame.TANK_P1.direction = 'D'
                     MainGame.TANK_P1.stop = False
-
                 elif event.key == pygame.K_SPACE:
                     print("发射子弹")
                     # 产生一颗子弹
                     m = Bullet(MainGame.TANK_P1)
                     # 将子弹加入子弹列表
                     MainGame.Bullet_list.append(m)
-
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
@@ -157,6 +154,7 @@ class MainGame:
 
 class Tank:
     """坦克基类"""
+
     def __init__(self, left, top):
         self.images = {  # 坦克图片集
             'U': pygame.image.load('img/p1tankU.gif'),
@@ -191,7 +189,7 @@ class Tank:
 
     def shoot(self):
         """射击"""
-        return Bullet(self) # 传入自身坦克对象
+        return Bullet(self)  # 传入自身坦克对象
 
     def displayTank(self):
         """
@@ -202,16 +200,18 @@ class Tank:
         self.image = self.images[self.direction]
         # 2.将坦克加入到窗口
         MainGame.window.blit(self.image, self.rect)
-        
+
 
 class MyTank(Tank):
     """我方坦克"""
+
     def __init__(self):
         pass
 
 
 class EnemyTank(Tank):
     """敌方坦克"""
+
     def __init__(self, left, top, speed):
         # 图片集合
         self.images = {  # 敌方坦克图片集
@@ -229,10 +229,10 @@ class EnemyTank(Tank):
         self.rect.top = top
         self.speed = speed  # 速度
         self.stop = True  # 移动开关
-        self.step = 50 # 步数，控制随机移动
+        self.step = 50  # 步数，控制随机移动
 
     def randomDirection(self):
-        num = random.randint(1,4)
+        num = random.randint(1, 4)
         if num == 1:
             return 'U'
         elif num == 2:
@@ -256,6 +256,7 @@ class EnemyTank(Tank):
 
 class Bullet:
     """子弹类"""
+
     def __init__(self, tank):
         # 图片
         self.image = pygame.image.load('img/tankmissile.gif')
@@ -268,24 +269,32 @@ class Bullet:
         # 初始化位置需根据坦克的方向进行调整
         if self.direction == 'U':
             # self.rect.left += (坦克宽度的一半 - 子弹宽度的一半)
-            self.rect.left = tank.rect.left + tank.rect.width/2 - self.rect.width/2
+            self.rect.left = tank.rect.left + tank.rect.width / 2 - self.rect.width / 2
             self.rect.top = tank.rect.top - self.rect.height
-            print(tank.rect.top)
-            print(self.rect.height)
-
         elif self.direction == 'D':
-            self.rect.left = tank.rect.left + tank.rect.width/2 - self.rect.width/2
+            self.rect.left = tank.rect.left + tank.rect.width / 2 - self.rect.width / 2
             self.rect.top = tank.rect.top + tank.rect.height
         elif self.direction == 'L':
-            self.rect.left = tank.rect.left - self.rect.width/2
-            self.rect.top = tank.rect.top + tank.rect.width/2 - self.rect.width/2
+            self.rect.left = tank.rect.left - self.rect.width / 2
+            self.rect.top = tank.rect.top + tank.rect.width / 2 - self.rect.width / 2
         elif self.direction == 'R':
             self.rect.left = tank.rect.left + tank.rect.width
-            self.rect.top = tank.rect.top + tank.rect.height/2 - self.rect.width/2
+            self.rect.top = tank.rect.top + tank.rect.height / 2 - self.rect.width / 2
 
-    def move(self):
+    def bulletMove(self):
         """子弹移动"""
-        pass
+        if self.direction == 'U':
+            if self.rect.top > 0:
+                self.rect.top -= self.speed
+        elif self.direction == 'D':
+            if self.rect.top < MainGame.SCREEN_HIGHT - self.rect.height:
+                self.rect.top += self.speed
+        elif self.direction == 'L':
+            if self.rect.left > 0:
+                self.rect.left -= self.speed
+        elif self.direction == 'R':
+            if self.rect.left < MainGame.SCREEN_WIDTH - self.rect.width:
+                self.rect.left += self.speed
 
     def displayBullet(self):
         """展示子弹 - 在窗口中显示"""
@@ -294,6 +303,7 @@ class Bullet:
 
 class Expolde:
     """爆炸效果"""
+
     def __init__(self):
         pass
 
@@ -304,6 +314,7 @@ class Expolde:
 
 class Wall:
     """爆炸效果"""
+
     def __init__(self):
         pass
 
@@ -314,6 +325,7 @@ class Wall:
 
 class Music:
     """音效"""
+
     def __init__(self):
         pass
 
