@@ -2,11 +2,11 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.09
+坦克大战 v1.10
 
-新增敌方坦克：
-	1.完善敌方坦克类
-    2.创建敌方坦克，将敌方坦克展示到窗口中
+新增敌方坦克功能：
+	1.实现敌方坦克的移动
+    	随机移动（在某一个方向移动一定距离的时候，随机更换方向继续移动）
 """
 
 
@@ -17,7 +17,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
 COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.09'
+VERSION = 'v1.10'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -30,7 +30,7 @@ class MainGame:
     TANK_P1 = None
     # 创建敌方坦克
     EnemyTank_list = []
-    EnemyTank_count = 6
+    EnemyTank_count = 4
 
     def __init__(self):
         pass
@@ -80,6 +80,7 @@ class MainGame:
     def blitEnemyTnak(self):
         for eTank in MainGame.EnemyTank_list:
             eTank.displayTank()
+            eTank.randomMove()
 
     def getEvent(self):
         """获取程序期间所有事件（鼠标事件、键盘事件）"""
@@ -214,6 +215,7 @@ class EnemyTank(Tank):
         self.rect.top = top
         self.speed = speed  # 速度
         self.stop = True  # 移动开关
+        self.step = 50 # 步数，控制随机移动
 
     def randomDirection(self):
         num = random.randint(1,4)
@@ -226,8 +228,18 @@ class EnemyTank(Tank):
         elif num == 4:
             return 'R'
 
-    # def displayEnemyTank(self):
-    #     super().displayTank()
+    def randomMove(self):
+        """随机移动"""
+        if self.step <= 0:
+            # 每20步重置
+            self.direction = self.randomDirection()
+            self.step = 50
+        else:
+            self.move()
+            self.step -= 1
+        time.sleep(0.02)
+
+
 
 class Bullet:
     """子弹类"""
