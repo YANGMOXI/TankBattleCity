@@ -2,10 +2,14 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.05
+坦克大战 v1.06
 
 新增功能：
-    加载我方坦克
+    1.坦克类速度speed属性，用来控制坦克移动快慢
+    2.事件处理：
+        2.1 改变坦克方向
+        2.2 修改坦克位置（left, top）
+            屈居于坦克的速度
 """
 
 
@@ -14,7 +18,7 @@ import pygame
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
 COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.05'
+VERSION = 'v1.06'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -62,12 +66,26 @@ class MainGame:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     print("坦克向左")
+                    # 修改坦克方向
+                    MainGame.TANK_P1.direction = 'L'
+                    # 移动操作
+                    MainGame.TANK_P1.move()
+
                 elif event.key == pygame.K_RIGHT:
                     print("坦克向右")
+                    MainGame.TANK_P1.direction = 'R'
+                    MainGame.TANK_P1.move()
+
                 elif event.key == pygame.K_UP:
                     print("坦克向上")
+                    MainGame.TANK_P1.direction = 'U'
+                    MainGame.TANK_P1.move()
+
                 elif event.key == pygame.K_DOWN:
                     print("坦克向下")
+                    MainGame.TANK_P1.direction = 'D'
+                    MainGame.TANK_P1.move()
+
                 elif event.key == pygame.K_SPACE:
                     print("发射子弹")
 
@@ -104,10 +122,18 @@ class Tank:
         # 指定初始化位置
         self.rect.left = left
         self.rect.top = top
+        self.speed = 5  # 速度/单位位移
 
     def move(self):
         """移动"""
-        pass
+        if self.direction == 'L':
+            self.rect.left -= self.speed
+        elif self.direction == 'R':
+            self.rect.left += self.speed
+        elif self.direction == 'U':
+            self.rect.top -= self.speed
+        elif self.direction == 'D':
+            self.rect.top += self.speed
 
     def shoot(self):
         """射击"""
