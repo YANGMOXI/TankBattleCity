@@ -2,11 +2,10 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.14
+坦克大战 v1.15
 
-优化子弹的移动：
-	1.子弹打中墙壁时，直接消除
-	2.解决无限发射子弹问题（屏幕上最多出现3发子弹）
+新增功能：
+    敌方坦克可以发送子弹
 """
 
 import pygame
@@ -16,7 +15,7 @@ import random
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125, 125, 125)
 COLOR_BLACK = pygame.Color(0, 0, 0)
-VERSION = 'v1.14'
+VERSION = 'v1.15'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -30,8 +29,10 @@ class MainGame:
     # 创建敌方坦克
     EnemyTank_list = []
     EnemyTank_count = 4
-    # 存储我方子弹的列表
+    # 我方子弹 — 存储列表
     Bullet_list = []
+    # 敌方子弹 — 存储列表
+    Enemy_bullet_list = []
 
     def __init__(self):
         pass
@@ -42,7 +43,7 @@ class MainGame:
         # 创建窗口，加载窗口 -> surface（画布）
         MainGame.window = _display.set_mode(size=(MainGame.SCREEN_WIDTH, MainGame.SCREEN_HIGHT))
         # 创建我方坦克
-        MainGame.TANK_P1 = Tank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
+        MainGame.TANK_P1 = MyTank((MainGame.SCREEN_WIDTH - P1_TANK_SIZE[0]) / 2,
                                 MainGame.SCREEN_HIGHT - P1_TANK_SIZE[1])  # 初始位置
         # 创建敌方坦克
         self.creatEnemyTank()
@@ -59,42 +60,58 @@ class MainGame:
             # 我方坦克 —— 在窗口中显示
             MainGame.TANK_P1.displayTank()
             # 敌方坦克 —— 在窗口中显示
-            self.blitEnemyTnak()
+            self.blitEnemyTank()
             # 根据tank移动开关状态进行移动
             if MainGame.TANK_P1 and not MainGame.TANK_P1.stop:
                 MainGame.TANK_P1.move()
 
-            # 子弹列表方法
+            # 我方 - 渲染子弹列表方法
             self.blitBullet()
+            # 敌方 - 渲染子弹列表方法
+            self.blitEnemyBullet()
 
             time.sleep(0.02)
             # 窗口刷新
             _display.update()
 
     def creatEnemyTank(self):
-        """创建敌方坦克"""
+        """敌方坦克 —— 创建坦克"""
         # 生成位置范围
         top = 120
-        speed = random.randint(3, 5)
+
         for i in range(MainGame.EnemyTank_count):
+            speed = random.randint(3, 5) # 每辆坦克速度不一样
             left = random.randint(1, 7)  # 横坐标区间 —— 允许重复
             eTank = EnemyTank(left * 100, top, speed)
             MainGame.EnemyTank_list.append(eTank)
 
-    def blitEnemyTnak(self):
-        """将坦克加入到窗口中"""
+    def blitEnemyTank(self):
+        """敌方坦克 —— 加入到窗口中"""
         for eTank in MainGame.EnemyTank_list:
             eTank.displayTank()
             eTank.randomMove()
+            # 射击（随机性）—— 产生子弹
+            eBullet = eTank.shoot()
+            if eBullet:  # 子弹 存储到敌方子弹列表
+                MainGame.Enemy_bullet_list.append(eBullet)
 
     def blitBullet(self):
-        """将子弹加入到窗口中"""
+        """我方子弹 —— 加入到窗口中"""
         for bullet in MainGame.Bullet_list:
             if bullet.live:
                 bullet.displayBullet()
                 bullet.bulletMove()
             else:
                 MainGame.Bullet_list.remove(bullet)
+
+    def blitEnemyBullet(self):
+        """敌方子弹 —— 加入到窗口中"""
+        for eBullet in MainGame.Enemy_bullet_list:
+            if eBullet.live:
+                eBullet.displayBullet()  # 子弹显示
+                eBullet.bulletMove()  # 子弹移动
+            else:
+                MainGame.Enemy_bullet_list.remove(eBullet) # 从列表中 删除子弹
 
     def getEvent(self):
         """获取程序期间所有事件（鼠标事件、键盘事件）"""
@@ -128,13 +145,14 @@ class MainGame:
                     MainGame.TANK_P1.stop = False
                 elif event.key == pygame.K_SPACE:
                     print("发射子弹")
-                    if len(MainGame.Bullet_list) < 3:
+                    if len(MainGame.Bullet_list) < 5:
                         # 产生一颗子弹
                         m = Bullet(MainGame.TANK_P1)
                         # 将子弹加入子弹列表
                         MainGame.Bullet_list.append(m)
                     else:
-                        print("子弹数量不足")
+                        print("当前子弹数量不足")
+
                     print("当前子弹数量:%d" %len(MainGame.Bullet_list))
 
             if event.type == pygame.KEYUP:
@@ -160,7 +178,6 @@ class MainGame:
 
 class Tank:
     """坦克基类"""
-
     def __init__(self, left, top):
         self.images = {  # 坦克图片集
             'U': pygame.image.load('img/p1tankU.gif'),
@@ -195,7 +212,7 @@ class Tank:
 
     def shoot(self):
         """射击"""
-        return Bullet(self)  # 传入自身坦克对象
+        return Bullet(self)
 
     def displayTank(self):
         """
@@ -210,14 +227,12 @@ class Tank:
 
 class MyTank(Tank):
     """我方坦克"""
-
-    def __init__(self):
-        pass
+    def __init__(self, left, top):
+        super().__init__(left, top)
 
 
 class EnemyTank(Tank):
     """敌方坦克"""
-
     def __init__(self, left, top, speed):
         # 图片集合
         self.images = {  # 敌方坦克图片集
@@ -259,10 +274,14 @@ class EnemyTank(Tank):
             self.step -= 1
         time.sleep(0.02)
 
+    def shoot(self):
+        """随机产生子弹 —— 重写父类"""
+        num = random.randint(1,100)
+        if num == 1:
+            return Bullet(self)
 
 class Bullet:
     """子弹类"""
-
     def __init__(self, tank):
         # 图片
         self.image = pygame.image.load('img/tankmissile.gif')
@@ -319,7 +338,6 @@ class Bullet:
 
 class Expolde:
     """爆炸效果"""
-
     def __init__(self):
         pass
 
@@ -330,7 +348,6 @@ class Expolde:
 
 class Wall:
     """爆炸效果"""
-
     def __init__(self):
         pass
 
@@ -341,7 +358,6 @@ class Wall:
 
 class Music:
     """音效"""
-
     def __init__(self):
         pass
 
