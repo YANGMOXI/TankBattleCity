@@ -2,19 +2,22 @@
 # date: 2021/2/9 22:39
 
 """
-坦克大战 v1.07
+坦克大战 v1.08
 
 优化功能：
-    坦克移动——越界问题
+    优化坦克的移动方式：
+        1.按下方向键，坦克持续移动
+        2.松开方向键，坦克停止
 """
 
 
 import pygame
+import time
 
 _display = pygame.display
 COLOR_GRAY = pygame.Color(125,125,125)
 COLOR_BLACK = pygame.Color(0,0,0)
-VERSION = 'v1.07'
+VERSION = 'v1.08'
 P1_TANK_SIZE = pygame.image.load('img/p1tankU.gif').get_size()
 
 
@@ -47,7 +50,12 @@ class MainGame:
             MainGame.window.blit(self.getTextSurface('剩余敌方坦克%d辆' %5), (10,10)) # 小画布; 坐标
             # 显示坦克到窗口中
             MainGame.TANK_P1.displayTank()
-            _display.update() # 窗口刷新
+            # 根据tank移动开关状态进行移动
+            if MainGame.TANK_P1 and not MainGame.TANK_P1.stop:
+                MainGame.TANK_P1.move()
+                time.sleep(0.02)
+            # 窗口刷新
+            _display.update()
 
     def getEvent(self):
         """获取程序期间所有事件（鼠标事件、键盘事件）"""
@@ -65,25 +73,30 @@ class MainGame:
                     # 修改坦克方向
                     MainGame.TANK_P1.direction = 'L'
                     # 移动操作
-                    MainGame.TANK_P1.move()
+                    # MainGame.TANK_P1.move()
+                    MainGame.TANK_P1.stop = False # 打开开关
 
                 elif event.key == pygame.K_RIGHT:
                     print("坦克向右")
                     MainGame.TANK_P1.direction = 'R'
-                    MainGame.TANK_P1.move()
+                    MainGame.TANK_P1.stop = False
 
                 elif event.key == pygame.K_UP:
                     print("坦克向上")
                     MainGame.TANK_P1.direction = 'U'
-                    MainGame.TANK_P1.move()
+                    MainGame.TANK_P1.stop = False
 
                 elif event.key == pygame.K_DOWN:
                     print("坦克向下")
                     MainGame.TANK_P1.direction = 'D'
-                    MainGame.TANK_P1.move()
+                    MainGame.TANK_P1.stop = False
 
                 elif event.key == pygame.K_SPACE:
                     print("发射子弹")
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                    MainGame.TANK_P1.stop = True  # 关闭开关——tank停止
 
     def getTextSurface(self, text):
         """绘制文字"""
@@ -119,6 +132,7 @@ class Tank:
         self.rect.left = left
         self.rect.top = top
         self.speed = 5  # 速度/单位位移
+        self.stop = True  # 坦克移动开关
 
     def move(self):
         """移动"""
